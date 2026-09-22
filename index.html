@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抗生素闖關問答 | 2026 世界抗生素週</title>
+<style>
+:root{
+  --bg:#f7f5ef; --card:#ffffff; --border:#ddd8c9; --border-strong:#c9c2ab;
+  --text:#2c2c2a; --text-sec:#5f5e5a; --text-muted:#888780;
+  --accent:#0f6e56; --accent-bg:#e1f5ee; --accent-strong:#085041;
+  --danger:#a32d2d; --danger-bg:#fcebeb;
+  --warn:#854f0b; --warn-bg:#faeeda;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1c1a; --card:#26241f; --border:#444139; --border-strong:#5c584c;
+    --text:#f1efe8; --text-sec:#c9c7bc; --text-muted:#9a988c;
+    --accent:#5dcaa5; --accent-bg:#0f6e56; --accent-strong:#e1f5ee;
+    --danger:#f09595; --danger-bg:#501313;
+    --warn:#fac775; --warn-bg:#412402;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c1c1a; --card:#26241f; --border:#444139; --border-strong:#5c584c;
+  --text:#f1efe8; --text-sec:#c9c7bc; --text-muted:#9a988c;
+  --accent:#5dcaa5; --accent-bg:#0f6e56; --accent-strong:#e1f5ee;
+  --danger:#f09595; --danger-bg:#501313;
+  --warn:#fac775; --warn-bg:#412402;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  display:flex; justify-content:center; padding:20px 12px;
+}
+.wrap{width:100%; max-width:480px;}
+.header{text-align:center; margin-bottom:16px;}
+.header .tag{
+  display:inline-block; background:var(--accent-bg); color:var(--accent-strong);
+  font-size:12px; padding:4px 12px; border-radius:20px; margin-bottom:8px;
+}
+.header h1{font-size:20px; margin:0 0 4px; font-weight:700;}
+.header p{font-size:13px; color:var(--text-sec); margin:0;}
+.progress{
+  display:flex; gap:6px; margin-bottom:16px;
+}
+.progress .seg{flex:1; height:5px; border-radius:3px; background:var(--border);}
+.progress .seg.done{background:var(--accent);}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:20px; margin-bottom:14px;
+}
+.qnum{font-size:12px; color:var(--text-muted); margin-bottom:6px;}
+.qtext{font-size:17px; font-weight:700; line-height:1.5; margin-bottom:16px;}
+.opt{
+  display:block; width:100%; text-align:left; padding:12px 14px;
+  border:1px solid var(--border-strong); border-radius:10px; background:var(--card);
+  color:var(--text); font-size:15px; margin-bottom:10px; cursor:pointer;
+  transition:background .15s;
+}
+.opt:active{transform:scale(0.98);}
+.opt.correct{background:var(--accent-bg); border-color:var(--accent); color:var(--accent-strong); font-weight:700;}
+.opt.wrong{background:var(--danger-bg); border-color:var(--danger); color:var(--danger); font-weight:700;}
+.opt[disabled]{cursor:default;}
+.feedback{
+  font-size:14px; line-height:1.6; padding:12px 14px; border-radius:10px;
+  background:var(--warn-bg); color:var(--warn); margin-top:6px; display:none;
+}
+.feedback.show{display:block;}
+.nextbtn{
+  width:100%; padding:13px; border:none; border-radius:10px; background:var(--accent);
+  color:#fff; font-size:15px; font-weight:700; margin-top:14px; cursor:pointer; display:none;
+}
+.nextbtn.show{display:block;}
+.result{text-align:center; padding:28px 20px;}
+.result .score{font-size:42px; font-weight:700; color:var(--accent); margin:6px 0;}
+.result h2{font-size:19px; margin:0 0 6px;}
+.result p{font-size:14px; color:var(--text-sec); line-height:1.7;}
+.slogan{
+  margin-top:16px; padding:14px; background:var(--accent-bg); border-radius:10px;
+  font-size:13px; color:var(--accent-strong); line-height:1.7; text-align:left;
+}
+.restart{
+  width:100%; padding:13px; border:1px solid var(--border-strong); border-radius:10px;
+  background:transparent; color:var(--text); font-size:15px; margin-top:14px; cursor:pointer;
+}
+.footer-note{text-align:center; font-size:11px; color:var(--text-muted); margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <span class="tag">2026 世界抗生素週 11/18–24</span>
+    <h1>抗生素闖關問答</h1>
+    <p>同一健康，同一行動：立即預防抗生素抗藥性</p>
+  </div>
+  <div class="progress" id="progress"></div>
+  <div id="quizArea"></div>
+  <div id="resultArea"></div>
+  <div class="footer-note">資料來源：WHO 世界抗生素週 2026 主題、衛福部疾病管制署「四不一要」衛教原則</div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "小明感冒喉嚨痛，想直接跟醫師『指定』開抗生素比較快好，這樣做對嗎？",
+    opts: ["對，指定開藥比較快好", "不對，感冒多為病毒感染，抗生素對病毒無效"],
+    correct: 1,
+    fb: "多數感冒、流感由病毒引起，抗生素只對細菌有效。主動要求抗生素不僅無效，還可能助長抗藥菌產生——這正是「四不一要」的第一不：不主動要求抗生素。"
+  },
+  {
+    q: "上次感染剩下的抗生素還有半瓶，這次類似症狀可以直接吃嗎？",
+    opts: ["可以，症狀類似就能吃", "不可以，每次用藥都要經醫師評估"],
+    correct: 1,
+    fb: "不同感染需要的藥物種類、劑量、療程都不同，自行服用剩藥可能無效或誘發抗藥性，這是「不隨便自己買抗生素吃」及「不吃他人的抗生素」的精神。"
+  },
+  {
+    q: "服用抗生素後兩天覺得症狀改善很多，可以自行停藥嗎？",
+    opts: ["可以，症狀改善就代表好了", "不可以，要吃滿醫師開立的完整療程"],
+    correct: 1,
+    fb: "症狀改善不代表細菌已完全清除，提早停藥容易讓殘存細菌產生抗藥性、之後更難治療。這就是「不隨便停藥、要遵照醫囑使用抗生素」。"
+  },
+  {
+    q: "2026 年世界抗生素週的主題精神最接近下列哪一項？",
+    opts: ["只有醫院要負責抗藥性防治", "人類、動物、環境健康是一體的，需要同一行動"],
+    correct: 1,
+    fb: "今年主題「One Health, one action: Prevent AMR now」（同一健康，同一行動：立即預防抗生素抗藥性）強調人、動物、環境健康彼此相連，防治抗藥性需要跨領域一起行動。"
+  },
+  {
+    q: "下列哪一個做法有助於預防抗生素抗藥性？",
+    opts: ["勤洗手、按時接種疫苗，減少感染機會", "多囤積抗生素以備不時之需"],
+    correct: 0,
+    fb: "加強手部衛生與按建議接種疫苗，能有效降低感染機會，從源頭減少不必要的抗生素使用，是防治抗藥性最基本也最重要的一步。"
+  }
+];
+
+let current = 0, score = 0, answered = false;
+
+function renderProgress(){
+  const p = document.getElementById('progress');
+  p.innerHTML = questions.map((_,i)=>`<div class="seg${i<current?' done':''}"></div>`).join('');
+}
+
+function renderQuestion(){
+  answered = false;
+  renderProgress();
+  const q = questions[current];
+  const area = document.getElementById('quizArea');
+  area.innerHTML = `
+    <div class="card">
+      <div class="qnum">第 ${current+1} / ${questions.length} 題</div>
+      <div class="qtext">${q.q}</div>
+      ${q.opts.map((o,i)=>`<button class="opt" data-idx="${i}">${o}</button>`).join('')}
+      <div class="feedback" id="fb"></div>
+      <button class="nextbtn" id="nextBtn">下一題</button>
+    </div>
+  `;
+  area.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(answered) return;
+      answered = true;
+      const idx = parseInt(btn.getAttribute('data-idx'));
+      const opts = area.querySelectorAll('.opt');
+      opts.forEach(b=>b.setAttribute('disabled','true'));
+      opts[q.correct].classList.add('correct');
+      if(idx !== q.correct){
+        btn.classList.add('wrong');
+      } else {
+        score++;
+      }
+      const fb = document.getElementById('fb');
+      fb.textContent = q.fb;
+      fb.classList.add('show');
+      document.getElementById('nextBtn').classList.add('show');
+    });
+  });
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    current++;
+    if(current < questions.length){
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  });
+}
+
+function renderResult(){
+  document.getElementById('quizArea').innerHTML = '';
+  renderProgress();
+  document.querySelectorAll('.progress .seg').forEach(s=>s.classList.add('done'));
+  let msg = "";
+  if(score === questions.length) msg = "全對！你是防疫小尖兵，記得把「四不一要」也分享給家人朋友。";
+  else if(score >= questions.length - 1) msg = "非常接近滿分，抗生素正確用藥觀念很不錯！";
+  else msg = "有些觀念可以再加強，一起把「四不一要」牢記在心。";
+
+  document.getElementById('resultArea').innerHTML = `
+    <div class="card result">
+      <h2>挑戰完成</h2>
+      <div class="score">${score} / ${questions.length}</div>
+      <p>${msg}</p>
+      <div class="slogan">
+        <b>四不一要</b><br>
+        不主動要求抗生素・不隨便自己買抗生素吃・不吃他人的抗生素・不隨便停藥・要遵照醫囑使用抗生素
+      </div>
+      <button class="restart" id="restartBtn">再玩一次</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    current = 0; score = 0;
+    document.getElementById('resultArea').innerHTML = '';
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
